@@ -1,8 +1,6 @@
-import { auth } from "@clerk/nextjs/server";
 import { FileText, Briefcase, KanbanSquare, TrendingUp } from "lucide-react";
 
 export default async function DashboardPage() {
-  const { userId } = auth();
 
   const stats = [
     { label: "Resume Score", value: "—", icon: FileText, color: "text-primary" },

@@ -44,6 +44,7 @@ REWRITE_PROMPT = """You are a professional resume writer. Your task is to tailor
 
 CRITICAL CONSTRAINT — READ BEFORE WRITING:
 You MUST use ONLY facts present in the original resume.
+Never invent, never exaggerate, never hallucinate.
 - Do NOT add skills not in the original
 - Do NOT invent job titles, companies, dates, or responsibilities
 - Do NOT add certifications or degrees not explicitly stated

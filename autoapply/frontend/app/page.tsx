@@ -1,3 +1,4 @@
+// Landing page is static — no auth, no dynamic export needed
 "use client";
 
 import { useEffect, useRef, useState } from "react";
