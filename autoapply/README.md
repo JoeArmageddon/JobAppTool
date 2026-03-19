@@ -37,6 +37,32 @@
 
 ---
 
+## 🆓 Free to Run — No Paid AI Required
+
+AutoApply supports **two AI providers**. You can switch with a single environment variable.
+
+| Provider | Cost | Quality | Setup |
+|---|---|---|---|
+| **Anthropic Claude** ⭐ recommended | Pay-per-token (~$0.003/resume) | Best — especially for structured JSON extraction | [console.anthropic.com](https://console.anthropic.com) |
+| **Groq** (free tier) | Free up to rate limits | Great — Llama 3.3 70B performs well on all tasks | [console.groq.com](https://console.groq.com) |
+
+**To use Groq (free):**
+```bash
+# In your .env file:
+LLM_PROVIDER=groq
+GROQ_API_KEY=gsk_...   # free at console.groq.com — no credit card needed
+```
+
+**To use Anthropic (recommended):**
+```bash
+LLM_PROVIDER=anthropic
+ANTHROPIC_API_KEY=sk-ant-...
+```
+
+Groq's free tier gives you **14,400 requests/day** on Llama 3.3 70B — more than enough for personal use. Anthropic Claude produces marginally better structured JSON output, especially for complex resumes, which is why it's the default.
+
+---
+
 ## Why AutoApply?
 
 Modern job searching is broken. You manually rewrite your resume for every application, paste the same cover letter into dozens of forms, and lose track of where you applied. AutoApply automates the entire pipeline — without compromising your resume's integrity or your privacy.
@@ -111,8 +137,16 @@ cd JobAppTool/autoapply
 
 # 2. Configure
 cp .env.example .env
-# Open .env and fill in:
-#   ANTHROPIC_API_KEY=sk-ant-...
+# Open .env and fill in your AI provider (pick one):
+#
+#   Option A — Anthropic Claude (recommended, pay-per-token):
+#     ANTHROPIC_API_KEY=sk-ant-...
+#
+#   Option B — Groq (free tier, no credit card):
+#     LLM_PROVIDER=groq
+#     GROQ_API_KEY=gsk_...
+#
+# Plus Clerk auth keys:
 #   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_...
 #   CLERK_SECRET_KEY=sk_live_...
 #   CLERK_WEBHOOK_SECRET=whsec_...
@@ -225,11 +259,20 @@ This is enforced in code and verified in the test suite. Violation is a product 
 
 ## 🔧 Configuration
 
-### Required Variables
+### AI Provider (pick one)
 
 | Variable | Description |
 |---|---|
-| `ANTHROPIC_API_KEY` | Get yours at [console.anthropic.com](https://console.anthropic.com) |
+| `LLM_PROVIDER` | `anthropic` (default, recommended) or `groq` (free) |
+| `ANTHROPIC_API_KEY` | Required when `LLM_PROVIDER=anthropic` — [console.anthropic.com](https://console.anthropic.com) |
+| `GROQ_API_KEY` | Required when `LLM_PROVIDER=groq` — free at [console.groq.com](https://console.groq.com) |
+| `ANTHROPIC_MODEL` | Optional override — default: `claude-sonnet-4-20250514` |
+| `GROQ_MODEL` | Optional override — default: `llama-3.3-70b-versatile` |
+
+### Auth (required)
+
+| Variable | Description |
+|---|---|
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk dashboard → API Keys |
 | `CLERK_SECRET_KEY` | Clerk dashboard → API Keys |
 | `CLERK_WEBHOOK_SECRET` | Clerk dashboard → Webhooks → your endpoint secret |

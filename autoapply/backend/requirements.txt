@@ -14,8 +14,9 @@ PyJWT==2.10.1
 httpx==0.28.1
 clerk-backend-api==1.4.0
 
-# AI
+# AI — Anthropic (recommended) or Groq (free fallback)
 anthropic==0.40.0
+groq==0.11.0
 
 # Resume parsing
 PyMuPDF==1.25.1

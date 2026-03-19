@@ -1,16 +1,14 @@
 """
-Resume scorer — evaluates ATS-friendliness, impact, and completeness via Claude.
+Resume scorer — evaluates ATS-friendliness, impact, and completeness via LLM.
 Returns numeric scores (0–100) and actionable suggestions.
 """
 
 import json
-import os
 from typing import Any
 
-import anthropic
 from loguru import logger
 
-_client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+from services.llm import complete
 
 SCORE_PROMPT = """You are an expert resume reviewer and ATS specialist.
 
@@ -50,17 +48,10 @@ Resume JSON:
 async def score_resume(structured_json: dict[str, Any]) -> dict[str, Any]:
     """Score a parsed resume and return scores + suggestions."""
     try:
-        message = _client.messages.create(
-            model="claude-sonnet-4-20250514",
+        content = await complete(
+            SCORE_PROMPT + json.dumps(structured_json, indent=2),
             max_tokens=2048,
-            messages=[
-                {
-                    "role": "user",
-                    "content": SCORE_PROMPT + json.dumps(structured_json, indent=2),
-                }
-            ],
         )
-        content = message.content[0].text.strip()
         if content.startswith("```"):
             content = content.split("\n", 1)[1]
             if content.endswith("```"):
@@ -72,9 +63,8 @@ async def score_resume(structured_json: dict[str, Any]) -> dict[str, Any]:
             result[key] = max(0.0, min(100.0, float(result.get(key, 0))))
 
         return result
-    except anthropic.APIError as exc:
-        logger.error(f"Claude API error during resume scoring: {exc}")
-        raise RuntimeError("Resume scoring service temporarily unavailable") from exc
+    except RuntimeError:
+        raise
     except json.JSONDecodeError as exc:
-        logger.error(f"Claude returned invalid JSON during scoring: {exc}")
+        logger.error(f"LLM returned invalid JSON during resume scoring: {exc}")
         raise RuntimeError("Resume scorer returned malformed data") from exc

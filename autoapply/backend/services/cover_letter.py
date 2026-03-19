@@ -1,12 +1,10 @@
 """Cover letter generator — 3-paragraph, max 280 words, professional."""
 
-import os
 from typing import Any
 
-import anthropic
 from loguru import logger
 
-_client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+from services.llm import complete
 
 COVER_LETTER_PROMPT = """Write a cover letter for the following job application.
 
@@ -46,12 +44,7 @@ async def generate_cover_letter(
             company=company,
             jd=jd_text,
         )
-        message = _client.messages.create(
-            model="claude-sonnet-4-20250514",
-            max_tokens=1024,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        return message.content[0].text.strip()
-    except anthropic.APIError as exc:
-        logger.error(f"Claude API error during cover letter generation: {exc}")
+        return await complete(prompt, max_tokens=1024)
+    except RuntimeError as exc:
+        logger.error(f"LLM error during cover letter generation: {exc}")
         raise RuntimeError("Cover letter service temporarily unavailable") from exc

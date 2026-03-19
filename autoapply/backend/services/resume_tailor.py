@@ -8,13 +8,11 @@ Violation is a product failure, not a bug.
 """
 
 import json
-import os
 from typing import Any
 
-import anthropic
 from loguru import logger
 
-_client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+from services.llm import complete
 
 GAP_ANALYSIS_PROMPT = """You are a resume optimization expert performing a gap analysis.
 
@@ -78,20 +76,18 @@ async def analyze_gap(resume_json: dict[str, Any], jd_text: str) -> dict[str, An
             resume=json.dumps(resume_json, indent=2),
             jd=jd_text,
         )
-        message = _client.messages.create(
-            model="claude-sonnet-4-20250514",
-            max_tokens=2048,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        content = message.content[0].text.strip()
+        content = await complete(prompt, max_tokens=2048)
         if content.startswith("```"):
             content = content.split("\n", 1)[1]
             if content.endswith("```"):
                 content = content.rsplit("```", 1)[0]
         return json.loads(content)
-    except anthropic.APIError as exc:
-        logger.error(f"Claude API error during gap analysis: {exc}")
+    except RuntimeError as exc:
+        logger.error(f"LLM error during gap analysis: {exc}")
         raise RuntimeError("Gap analysis service temporarily unavailable") from exc
+    except json.JSONDecodeError as exc:
+        logger.error(f"LLM returned invalid JSON during gap analysis: {exc}")
+        raise RuntimeError("Gap analysis returned malformed data") from exc
 
 
 async def rewrite_resume(
@@ -110,20 +106,18 @@ async def rewrite_resume(
             gap_analysis=json.dumps(gap_analysis, indent=2),
             jd=jd_text,
         )
-        message = _client.messages.create(
-            model="claude-sonnet-4-20250514",
-            max_tokens=4096,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        content = message.content[0].text.strip()
+        content = await complete(prompt, max_tokens=4096)
         if content.startswith("```"):
             content = content.split("\n", 1)[1]
             if content.endswith("```"):
                 content = content.rsplit("```", 1)[0]
         return json.loads(content)
-    except anthropic.APIError as exc:
-        logger.error(f"Claude API error during resume rewrite: {exc}")
+    except RuntimeError as exc:
+        logger.error(f"LLM error during resume rewrite: {exc}")
         raise RuntimeError("Resume tailoring service temporarily unavailable") from exc
+    except json.JSONDecodeError as exc:
+        logger.error(f"LLM returned invalid JSON during resume rewrite: {exc}")
+        raise RuntimeError("Resume rewrite returned malformed data") from exc
 
 
 async def tailor_resume(

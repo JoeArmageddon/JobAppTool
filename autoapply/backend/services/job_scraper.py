@@ -8,13 +8,12 @@ import os
 import uuid
 from typing import Any
 
-import anthropic
 import pandas as pd
 from jobspy import scrape_jobs
 from loguru import logger
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-_client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+from services.llm import complete
 
 JD_PARSE_PROMPT = """Parse this job description into structured JSON. Return ONLY valid JSON, no markdown:
 
@@ -54,21 +53,16 @@ Job description JSON:
 
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
 async def parse_jd(description: str) -> dict[str, Any]:
-    """Parse a job description into structured JSON via Claude."""
+    """Parse a job description into structured JSON via LLM."""
     try:
-        message = _client.messages.create(
-            model="claude-sonnet-4-20250514",
-            max_tokens=1024,
-            messages=[{"role": "user", "content": JD_PARSE_PROMPT + description}],
-        )
-        content = message.content[0].text.strip()
+        content = await complete(JD_PARSE_PROMPT + description, max_tokens=1024)
         if content.startswith("```"):
             content = content.split("\n", 1)[1]
             if content.endswith("```"):
                 content = content.rsplit("```", 1)[0]
         return json.loads(content)
-    except anthropic.APIError as exc:
-        logger.error(f"Claude API error parsing JD: {exc}")
+    except RuntimeError as exc:
+        logger.error(f"LLM error parsing JD: {exc}")
         raise
 
 
@@ -79,12 +73,7 @@ async def score_job_match(resume_json: dict, jd_parsed: dict) -> dict[str, Any]:
             resume=json.dumps(resume_json, indent=2),
             job=json.dumps(jd_parsed, indent=2),
         )
-        message = _client.messages.create(
-            model="claude-sonnet-4-20250514",
-            max_tokens=1024,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        content = message.content[0].text.strip()
+        content = await complete(prompt, max_tokens=1024)
         if content.startswith("```"):
             content = content.split("\n", 1)[1]
             if content.endswith("```"):
@@ -92,8 +81,8 @@ async def score_job_match(resume_json: dict, jd_parsed: dict) -> dict[str, Any]:
         result = json.loads(content)
         result["match_score"] = max(0.0, min(100.0, float(result.get("match_score", 0))))
         return result
-    except anthropic.APIError as exc:
-        logger.error(f"Claude API error scoring job match: {exc}")
+    except RuntimeError as exc:
+        logger.error(f"LLM error scoring job match: {exc}")
         raise
 
 

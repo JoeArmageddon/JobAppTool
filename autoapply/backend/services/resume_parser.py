@@ -1,20 +1,18 @@
 """
-Resume parser — accepts PDF or DOCX, extracts text, sends to Claude for
+Resume parser — accepts PDF or DOCX, extracts text, sends to LLM for
 structured JSON extraction.
 """
 
 import json
-import os
 import tempfile
 from pathlib import Path
 from typing import Any
 
-import anthropic
 import fitz  # PyMuPDF
 from docx import Document
 from loguru import logger
 
-_client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+from services.llm import complete
 
 PARSE_PROMPT = """You are a resume parser. Extract all information from the resume text below into this exact JSON schema:
 
@@ -98,28 +96,16 @@ def extract_text(file_bytes: bytes, content_type: str) -> str:
 
 
 async def parse_resume(raw_text: str) -> dict[str, Any]:
-    """Send raw resume text to Claude and return structured JSON."""
+    """Send raw resume text to the LLM and return structured JSON."""
     try:
-        message = _client.messages.create(
-            model="claude-sonnet-4-20250514",
-            max_tokens=4096,
-            messages=[
-                {
-                    "role": "user",
-                    "content": PARSE_PROMPT + raw_text,
-                }
-            ],
-        )
-        content = message.content[0].text.strip()
-        # Strip markdown fences if Claude adds them despite instructions
+        content = await complete(PARSE_PROMPT + raw_text, max_tokens=4096)
         if content.startswith("```"):
             content = content.split("\n", 1)[1]
             if content.endswith("```"):
                 content = content.rsplit("```", 1)[0]
         return json.loads(content)
-    except anthropic.APIError as exc:
-        logger.error(f"Claude API error during resume parsing: {exc}")
-        raise RuntimeError("Resume parsing service temporarily unavailable") from exc
+    except RuntimeError:
+        raise
     except json.JSONDecodeError as exc:
-        logger.error(f"Claude returned invalid JSON during resume parsing: {exc}")
+        logger.error(f"LLM returned invalid JSON during resume parsing: {exc}")
         raise RuntimeError("Resume parser returned malformed data") from exc
