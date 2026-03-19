@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
+// geist package: npm install geist  (NOT next/font/google)
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
