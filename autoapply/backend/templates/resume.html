@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    /* ATS-safe: single column, no tables, standard fonts, readable hierarchy */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 11pt;
+      line-height: 1.4;
+      color: #000;
+      padding: 0.75in;
+      max-width: 8.5in;
+    }
+
+    h1 { font-size: 18pt; font-weight: bold; margin-bottom: 4pt; }
+    h2 {
+      font-size: 12pt;
+      font-weight: bold;
+      text-transform: uppercase;
+      border-bottom: 1px solid #000;
+      margin-top: 14pt;
+      margin-bottom: 6pt;
+      padding-bottom: 2pt;
+      letter-spacing: 0.5pt;
+    }
+    h3 { font-size: 11pt; font-weight: bold; }
+
+    .contact { font-size: 10pt; color: #333; margin-bottom: 6pt; }
+    .contact span { margin-right: 12pt; }
+
+    .summary { margin-bottom: 8pt; font-size: 10.5pt; }
+
+    .job { margin-bottom: 10pt; }
+    .job-header { display: flex; justify-content: space-between; }
+    .job-dates { font-size: 10pt; color: #444; white-space: nowrap; }
+
+    ul { padding-left: 16pt; margin-top: 4pt; }
+    li { margin-bottom: 2pt; font-size: 10.5pt; }
+
+    .skills-list { font-size: 10.5pt; }
+
+    .edu-item { margin-bottom: 8pt; }
+
+    .cert-item, .lang-item { font-size: 10.5pt; margin-bottom: 3pt; }
+
+    .project-item { margin-bottom: 8pt; }
+    .project-item p { font-size: 10pt; color: #333; margin-top: 2pt; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <h1>{{ r.name or '' }}</h1>
+  <div class="contact">
+    {% if r.email %}<span>{{ r.email }}</span>{% endif %}
+    {% if r.phone %}<span>{{ r.phone }}</span>{% endif %}
+    {% if r.location %}<span>{{ r.location }}</span>{% endif %}
+    {% if r.linkedin %}<span>{{ r.linkedin }}</span>{% endif %}
+    {% if r.github %}<span>{{ r.github }}</span>{% endif %}
+  </div>
+
+  <!-- Summary -->
+  {% if r.summary %}
+  <div class="summary">{{ r.summary }}</div>
+  {% endif %}
+
+  <!-- Skills -->
+  {% if r.skills %}
+  <h2>Skills</h2>
+  <p class="skills-list">{{ r.skills | join(', ') }}</p>
+  {% endif %}
+
+  <!-- Experience -->
+  {% if r.experience %}
+  <h2>Experience</h2>
+  {% for job in r.experience %}
+  <div class="job">
+    <div class="job-header">
+      <div>
+        <h3>{{ job.title }}</h3>
+        <div>{{ job.company }}</div>
+      </div>
+      <div class="job-dates">
+        {{ job.start_date or '' }}{% if job.end_date %} – {{ job.end_date }}{% elif job.current %} – Present{% endif %}
+      </div>
+    </div>
+    {% if job.responsibilities %}
+    <ul>
+      {% for item in job.responsibilities %}
+      <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% if job.achievements %}
+    <ul>
+      {% for item in job.achievements %}
+      <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  <!-- Education -->
+  {% if r.education %}
+  <h2>Education</h2>
+  {% for edu in r.education %}
+  <div class="edu-item">
+    <h3>{{ edu.degree }}{% if edu.field %} in {{ edu.field }}{% endif %}</h3>
+    <div>{{ edu.institution }}{% if edu.end_date %} · {{ edu.end_date }}{% endif %}{% if edu.gpa %} · GPA {{ edu.gpa }}{% endif %}</div>
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  <!-- Projects -->
+  {% if r.projects %}
+  <h2>Projects</h2>
+  {% for proj in r.projects %}
+  <div class="project-item">
+    <h3>{{ proj.name }}{% if proj.url %} ({{ proj.url }}){% endif %}</h3>
+    {% if proj.description %}<p>{{ proj.description }}</p>{% endif %}
+    {% if proj.technologies %}<p>Technologies: {{ proj.technologies | join(', ') }}</p>{% endif %}
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  <!-- Certifications -->
+  {% if r.certifications %}
+  <h2>Certifications</h2>
+  {% for cert in r.certifications %}
+  <div class="cert-item">{{ cert }}</div>
+  {% endfor %}
+  {% endif %}
+
+  <!-- Languages -->
+  {% if r.languages %}
+  <h2>Languages</h2>
+  <p>{{ r.languages | join(', ') }}</p>
+  {% endif %}
+
+</body>
+</html>

@@ -1,0 +1,27 @@
+import type { Metadata } from "next";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
+import { ClerkProvider } from "@clerk/nextjs";
+import "./globals.css";
+
+export const metadata: Metadata = {
+  title: "AutoApply — AI Job Application Agent",
+  description:
+    "Self-hostable AI that finds jobs, tailors your resume, and applies — all on your own infrastructure.",
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <ClerkProvider>
+      <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+        <body className="bg-background text-foreground antialiased">
+          {children}
+        </body>
+      </html>
+    </ClerkProvider>
+  );
+}

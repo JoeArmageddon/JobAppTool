@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"D:/Projects/Job Application Tool/.claude/hooks/snyk-check.js\"",
+            "async": true,
+            "statusMessage": "Snyk: scanning backend for vulnerabilities..."
+          }
+        ]
+      }
+    ]
+  }
+}
