@@ -12,14 +12,18 @@ from playwright.async_api import async_playwright
 
 from models.orm import Application
 from services.adapters.greenhouse import apply_greenhouse
+from services.adapters.icims import apply_icims
 from services.adapters.lever import apply_lever
+from services.adapters.workday import apply_workday
 
 ApplyOutcome = Literal["success", "failed", "requires_human"]
 
-# URL patterns → adapter
+# URL patterns → adapter (checked in priority order)
 _ADAPTER_PATTERNS: list[tuple[re.Pattern, callable]] = [
     (re.compile(r"greenhouse\.io", re.IGNORECASE), apply_greenhouse),
     (re.compile(r"lever\.co", re.IGNORECASE), apply_lever),
+    (re.compile(r"myworkdayjobs\.com|workday\.com", re.IGNORECASE), apply_workday),
+    (re.compile(r"icims\.com", re.IGNORECASE), apply_icims),
 ]
 
 
