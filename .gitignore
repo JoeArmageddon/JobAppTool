@@ -1,0 +1,11 @@
+# Claude Code workspace files — never commit these
+.claude/
+.mcp.json
+PROMPT.md
+claude.md
+CLAUDE.md
+
+# Plans directory (internal only)
+docs/
+
+# Everything project-specific lives inside autoapply/
