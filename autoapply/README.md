@@ -101,19 +101,21 @@ Modern job searching is broken. You manually rewrite your resume for every appli
 ### 🤖 Auto-Apply Engine
 Playwright-based adapters for the most common ATS platforms:
 
-| ATS | Status |
-|---|---|
-| Greenhouse | ✅ Supported |
-| Lever | ✅ Supported |
-| Workday | ✅ Supported |
-| iCIMS | ✅ Supported |
-| Indeed Easy Apply | 🔜 Roadmap |
+| ATS | Status | Notes |
+|---|---|---|
+| LinkedIn Easy Apply | ✅ Supported | Requires LinkedIn credentials + persistent session |
+| Greenhouse | ✅ Supported | |
+| Lever | ✅ Supported | |
+| Workday | ✅ Supported | Multi-step wizard, assessment detection |
+| iCIMS | ✅ Supported | Multi-page form |
+| Indeed Easy Apply | 🔜 Roadmap | |
 
 - `playwright-stealth` on every browser session
 - Human-like typing delays (40–120ms per keystroke)
 - Random pauses between actions (500ms–2500ms)
 - Screenshot stored on every successful submission
 - Returns `success` / `failed` / `requires_human` — never silently fails
+- LinkedIn session cookies are **persisted to disk** — logs in once, reuses the session
 
 ### 📋 Application Kanban
 Full lifecycle tracking with 7 columns: **Queued → Tailoring → Ready → Applied → Interview → Offer → Rejected**
@@ -287,6 +289,27 @@ This is enforced in code and verified in the test suite. Violation is a product 
 | `ENVIRONMENT` | `development` | `development` or `production` |
 | `UPLOADS_DIR` | `/app/uploads` | Where resume files and screenshots are stored |
 
+### LinkedIn Easy Apply Setup
+
+LinkedIn Easy Apply requires an authenticated LinkedIn session.
+
+```bash
+# In your .env file:
+LINKEDIN_EMAIL=your@email.com
+LINKEDIN_PASSWORD=your-linkedin-password
+```
+
+**How it works:**
+1. On the first Easy Apply run, the adapter logs in to LinkedIn using your credentials
+2. Session cookies are saved to `uploads/linkedin_browser/` (inside the Docker volume)
+3. Every subsequent run reuses the saved session — no re-login until the session expires
+
+**Important notes:**
+- Use a real LinkedIn account — Easy Apply requires profile data (headshot, connections, etc.)
+- LinkedIn detects unusual activity. Keep your daily apply limit low (5–15/day) and the adapter already uses human-like delays
+- If LinkedIn triggers a CAPTCHA or security challenge during login, the adapter returns `requires_human` — complete the challenge manually in a browser, then copy the session cookies
+- LinkedIn's ToS prohibits automation. Use this tool responsibly and at your own risk
+
 ### Clerk Setup
 
 1. Create a free account at [clerk.com](https://clerk.com)
@@ -416,7 +439,7 @@ docker compose exec celery_worker celery -A celery_app call workers.scrape_worke
 
 ## 🗺 Roadmap
 
-- [ ] **Indeed Easy Apply adapter** — the highest-volume source
+- [ ] **Indeed Easy Apply adapter** — the highest-volume source after LinkedIn
 - [ ] **Email notifications** — alert on new high-match jobs, interview requests
 - [ ] **Resume versioning** — keep multiple resume variants, A/B test match scores
 - [ ] **Analytics dashboard** — response rate by company size, role type, match score
